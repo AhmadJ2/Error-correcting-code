@@ -6,24 +6,60 @@ from sympy import *
 import numpy
 import random
 
+
+
+#inputs:
+encode = "1abcd0f0jijkl"
+print("Sending: ",encode)
+# we sent 16 points, k is 4, error = 2,
+# t = n - e -> n = t + e
+error = int(input())
+# maximum error: if |field| is 28
+
+def ord2(char):
+    if ord(char) - ord('0') > 10:
+        return ord(char)-ord('a')+10
+    return ord(char)-ord('0')
+
+def encode_one_letter(word, val):
+    start_ = 0
+    sum = 0
+    for i in range(0, len(word)):
+        sum += val ** start_ * ord2(word[i])
+        start_ += 1
+    return sum
+
+
+def make_noise(X_arr, Y_arr, num_of_noise):
+    num_of_curr_noise = 0
+    history = []
+    if num_of_noise == 0:
+        return
+    while true:
+        curr = random.randint(0, len(X_arr)-1)
+        if history.count(curr) == 0:
+            history.append(curr)
+            X_arr[curr] = random.randint(0, 100)
+            Y_arr[curr] = random.randint(0, 100)
+        if len(history) == num_of_noise:
+            break
+
 x_arr = []
 y_arr = []
-# The polynomial we are trying to find is "P(x) = x^2 - x + 3", so we add 10 x and y coordinates
-for i in range (0,16):
+# ((len(encode)+error) * 2 + 1)
+for i in range(0, 28):
+    y_arr.append(encode_one_letter(encode, i))
     x_arr.append(i)
-    y_arr.append(i**4 - 3*i**3 -7*i**2 + i + 1)
-# We add 5 more pairs of "errors" to see if the code still finds the original polynomial
-for i in range (0,14):
-    x_arr.append(random.randint(0, 100))
-    y_arr.append(random.randint(0, 100))
+make_noise(x_arr,y_arr,error)
+n = len(x_arr)
+k = len(encode)-1
+t = int(sqrt(2 * k * n))
+print('n is: ', n, '\nt is: ', t+1,'\ne is ',error,'\nk is: ',k)
 
-k = 4
-n = list.__len__(x_arr)
-D = int(sqrt(2 * k * n))
-print('n is: ', n, '\nD is: ', D)
-
-for i in range(0,list.__len__(x_arr)):
+for i in range(0, list.__len__(x_arr)):
     x_arr[i] = x_arr[i]
+
+
 def double_sigma_algo1(D, k, X, Y, Z_arr):
     for x in range(0, list.__len__(x_arr)):  # fix with +1
         for y in range(0, list.__len__(x_arr)):
@@ -71,17 +107,16 @@ def can_be_poli_div(p):
     return 'null'
 
 
-
 z_acc = []
 z_arr = []
 for i in range(0, list.__len__(x_arr)):
-    double_sigma_algo1(D, k, x_arr[i], y_arr[i], z_arr)
+    double_sigma_algo1(t, k, x_arr[i], y_arr[i], z_arr)
     list.append(z_acc, z_arr)
     z_arr = []
 z_acc = numpy.fliplr(z_acc)
 z_acc = numpy.fliplr(z_acc)
 # print(pol_array)
-#print(z_acc)
+# print(z_acc)
 z_soof = []
 for i in range(0, int(numpy.size(z_acc) / numpy.size(z_acc[0]))):
     row = []
@@ -116,33 +151,58 @@ while True:
         if solved[s].is_Number:
             poly_coeff[int(str(s)[1:])] = (solved[s])
 ff_arr = []
-double_sigma_algo1_last_step(D, k, poly_coeff, ff_arr)
+double_sigma_algo1_last_step(t, k, poly_coeff, ff_arr)
 # print(ff_arr)
 ff_arr_flat = 0
 for line in ff_arr:
     ff_arr_flat = ff_arr_flat + line
 # testing if the polynomial is legit:
 for i in range(0, list.__len__(x_arr)):
-    if not int(ff_arr_flat.replace(Symbol('x'), x_arr[i] ).replace(Symbol('y'), y_arr[i] ))  == 0:
+    if not int(ff_arr_flat.replace(Symbol('x'), x_arr[i]).replace(Symbol('y'), y_arr[i])) == 0:
         print('oops ', i)
-        print((ff_arr_flat.replace(Symbol('x'), x_arr[i] ).replace(Symbol('y'), y_arr[i] )) )
+        print((ff_arr_flat.replace(Symbol('x'), x_arr[i]).replace(Symbol('y'), y_arr[i])))
 print('-------')
 if not (ff_arr_flat.__eq__(factor(ff_arr_flat))):
     # print('Q_(X,Y): ', ff_arr_flat)
     # print('Q(X,Y): ', factor(ff_arr_flat))
     c = 0
+    skip = 0
     for x in factor(ff_arr_flat).args:
         if (can_be_poly(x)):
             # print(x.count(Symbol('y')))
             p = can_be_poli_div(x)
             for i in range(0, list.__len__(x_arr)):
-                if int(x.replace(Symbol('x'), x_arr[i] ).replace(Symbol('y'), y_arr[i] ))  == 0:
+                if int(x.replace(Symbol('x'), x_arr[i]).replace(Symbol('y'), y_arr[i])) == 0:
                     c = c + 1
-            if c > D:
+            if c > t:
                 if not x.is_Number:
                     x = x.replace(Symbol('y'), 0)
                     x_ = 0 - (x * p)
-                    print('Found one factor of Q(X,Y) that we can use:\n    ', x_)
+                    # print('Found one factor of Q(X,Y) that we can use:\n    ', x_)
+                    ret = ""
+                    count = 0
+                    index = 0
+                    map = {}
+                    while index<len(x_.args):
+                        if (x_.args[index].is_Number):
+                            map[0] = x_.args[index]
+                        elif len(x_.args[index].args[1].args)<2:
+                            map[1] = x_.args[index].args[0]
+                        else:
+                            map[x_.args[index].args[1].args[1]] = x_.args[index].args[0]
+                        index += 1
+                    for i in range(0,k+1):
+                        if map.__contains__(i):
+                            if map[i]<10:
+                                ret+=chr(map[i]+ord('0'))
+                            else:
+                                ret+=chr(map[i]-10+ord('a'))
+                        else:
+                            ret+='0'
+                    print("Receiving: " ,ret)
+
+
+
             c = 0
 else:
     # print('Q_(X,Y): ', ff_arr_flat)
@@ -150,50 +210,13 @@ else:
     c = 0
     if can_be_poly(ff_arr_flat):
         for i in range(0, list.__len__(x_arr)):
-            if int(ff_arr_flat.replace(Symbol('x'), x_arr[i] ).replace(Symbol('y'), y_arr[i] ))  == 0:
+            if int(ff_arr_flat.replace(Symbol('x'), x_arr[i]).replace(Symbol('y'), y_arr[i])) == 0:
                 c = c + 1
                 print('calculate')
-        if c > D:
+        if c > t:
             if not ff_arr_flat.is_Number:
                 div = can_be_poli_div(ff_arr_flat)
                 x = ff_arr_flat.replace(Symbol('y'), 0)
                 x_ = 0 - (x * div)
                 print('Found one factor of Q(X,Y) that we can use: ', x_)
-# This is the summary of the entire work, including the algorithms used and future plans
 
-# 1) First we take the input points as x_arr and y_arr
-# 2) Build the (1,k) degree polynomial with at most D (1,k) degree, we do that by building equations
-# so such Q(X,Y) is not only (1,k) D degree, and also fits the points we have,
-# if we choose D big enough ( That's what she said ), we are guaranteed to have an answer
-# 3) now with the answers we have, we simply need to find final answers since for example,
-# in the returned array of sympy.solve we have (a1: a2 + a3), a2 and a3 are free variables
-# and for that we replace them with 1 and now a1 = 2
-# 4) With the final answers in our hands, now we have Q(X,Y) and need to factorize it, using sympy
-# we can do so and recieve P1(X), P2(X)... Pn(X)
-# 5.1) We find the Pi(X) with degree K (not implemented, TODO: IMPLEMENT THIS)
-# 5.2) We find the Pi(X) such that the polynomial is "(y - pi(x))" and return 'pi(x)'
-# 6?) I'm not sure if I need to find a polynomial with at most K degree or exactly K, so we might
-# need to look at all the polynomials combinations to see which one to take
-
-# This is a summary of April month, I've been busy but thankfully I managed to work on it.
-
-# Summary of the current code:
-# So far the code seems to work fine, I've added the (F)n Field calculating so now
-# numbers wont go as big as they used to be, and we get additional polynomials, for now sometimes I have to make
-# D = D - 1
-
-# Need to know if we should take the D or the t as an initial parameter, so far I've not done the encoding
-# though it should not be a hard job since most of the work is on the decoding
-
-# I need more tests, as you see up in x_arr and y_arr I've tested multiple polynomials suck (X^2-4) (X^3)
-# and few more, they worked fine.
-
-# Casting to 'int' in some places is dangerous, I still have not fully migrated the N field to (F)n over finite n
-# I need to know if (1/2) is considered 1 or 0 in (F)3 for example, and if so, is managing fractions as easy as
-# managing natural numbers? meaning can I just round it down or up and call the day off?
-
-# So far I'm doing great in this project, I need to make sure all parameters are rounded correctly,
-# and not to forget, test, test, test!
-
-# I'm planning to simulate a faulty channel that will take message m and turn into m' with one (or more) errors
-# and see if I can find the error, no promises thought since I have exams soon and this seems like a hard job.
