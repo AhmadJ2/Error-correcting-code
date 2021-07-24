@@ -142,7 +142,8 @@ for i in range(0, numpy.size(z_acc[0])):
 for i in range(0, numpy.size(z_acc[0])):
     if not solved.keys().__contains__(Symbol('a' + str(i))):
         poly_coeff[i] = 1
-while True:
+while True: # Here we keep replacing each 'solved' unknown to further find new unknowns values, this step will work based on
+    # RS codes algorithms, thats why we use 'while True', beware, missing with 'D' values will cause this loop to never end sometimes!
     if list.count(poly_coeff, 'null') == 0:  # all coefficients found
         break
     for i in range(0, numpy.size(z_acc[0])):  # going through the coefficients to try and replace them
