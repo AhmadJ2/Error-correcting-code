@@ -1,63 +1,17 @@
-Required libraries:
- numpy
- random
- sympy
+- The goal of the project is to implement the Reed Solomon encoding and decoding algorithm.
 
-------------------------------------------------------------------------------------------------------------------------------------------------------------
+- The problem is:
 
-The goal of the project is to implement the Reed Solomon encoding and decoding algorithm
-The problem definition is : (explain about ECC abit and bring an example)
-Solutions (Count the lazy approach, sending the message N times, others are like Reed Solomon)
-Explain abit about how reed solomon works (Encode a word to polynomial, send N pairs (of X and P(X)) ;(a,b). and to decode them we have implemented the Reed Solomon decode...explain how)
-Experiments: Testing limits of the grade of the polynomials (we try big numbers), the amount of "error", and the length of the polynomial
-Conclusion: ...
-note : n is not the sum of points, but the correct coordinations
+	Assume we want to send data through a noisy channel, that we cannot guarantee a 100% recovery of the message, there are many protocols to send it and to have a better change of recovering the original message, one of them is obviously sending the message multiple times, but that will cost us a lot of data usage, and in this Project we will explore the Reed Solomon List Encoding & Decoding algorithm that will have a good chance of recovering the original message without sending too many messages.
 
-1- P(x) = (x + 1):
-	n = 3
-	e = 1
-	PICTURE OF THE OUTPUT:
+- A short explanation of the Reed Solomon List Encoding & Decoding algorithm:
 
-2 - P(x) = (x^2):
-	n = 7
-	e = 2
-	
+	Decoding: Assume we have ‘n’ pairs of coordinates, were we want to find a polynomial with a degree of ‘k’ that satisfies ‘t’ points of the coordinates, Reed Solomon Decoding algorithm solves this problem by building a bi-variate polynomial with specific traits that will help us to find the requested polynomial.
 
+	Encoding: The encoding process is easy compared to the encoding, we simply take the word we wish to transmit, turn it into a polynomial, s.t:
+If we wish to encode the word, we look at each character we haven, <c1,c2,c3..,ck>, and we build a polynomial that the coefficients of each ‘Xi’ are ‘ci’, so we end up with:
+c1+(c2*X)+(c3*X^2)...+(ck*X^k), and this is a polynomial with at most K degree.
 
-3- P(x) = (x^2 - 3)
-	n = 7
-	e = 3
+To further expand knowledge in the Reed Solomon List Encoding & Decoding you can read the article: http://www.cs.cmu.edu/~venkatg/pubs/papers/listdecoding-NOW.pdf
 
-
-4- P(x) = (x^3 - x^2 + x)
-	n = 10
-	e = 3
-
-
-5- P(x) = (x^4 - 3x^3 -7x^2 + x + 1)
-	n = 15
-	e = 6
-
-
-Run the algo on 5 trials, with 5 polynomials:
-	(x + 1)
-	(x^2)
-	(x^2 - 3)
-	(x^3 - x^2 + x)
-	(x^4 - 3x^3 -7x^2 + x + 1)
-Test them with different error coordinations
-Print the result
-
---------------------------------------------
-Explain about the code a bit:
-Steps:
-Step 1) We have two arrays of coordinates (X_arr and Y_arr), we need to find a polynomial with degree 'K' that will satisfy 'D' points of coordinates
-Step 2) We build a (1,k)-weighted degree polynomial that satisfies 'D' points, we do this by solving the linear system
-Step 3) We have the solution for the equation, we simply plug the values of the free variables to find all the coeffecient of the polynom
-Step 4) We factorize the polynom Q(X,Y) we built, and find which of the polynomials we found is polynomial with degree K
-Step 5 .... not done) we plug the coordinates and see if the polynomial satisfies atleast 't', if yes, return the polynomial
-
-
-
-
---------------------------------------------------------And now the decoding is done------------------------------------------------
+These are some of the experiments, where we have added ‘n’ correct pairs of coordinates that belong to the polynomial and ‘e’ pairs of error coordinates that do not belong, and testing if the polynomial is found through these correct and incorrect coordinates:
